@@ -1,0 +1,3 @@
+Process , 10
+Registry , 13
+Process , 17

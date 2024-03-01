@@ -1,0 +1,1 @@
+{"Flow Start": [{"flow": "1", "time": "3587", "proto": "udp", "local_addr": "10.127.0.162", "local_port": "138", "remote_addr": "10.127.255.255", "remote_port": "138"}], "Flow End": [{"flow": "1", "time": "125923", "tx_bytes": "695", "tx_packets": "3"}]}
