@@ -1,0 +1,6 @@
+gym==0.26.2
+lief==0.14.1
+numpy==1.26.4
+pefile==2023.2.7
+scikit_learn==1.2.2
+torch==2.2.1
