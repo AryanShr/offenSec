@@ -37,12 +37,12 @@ device = torch.device("cpu")
 USE_CUDA = False
 
 model = rl_train.DQN().to(device)
-model.load_state_dict(torch.load('modified\\updatedEpsilon\\rl-model-1240-2024-03-18.pt'))
+model.load_state_dict(torch.load('modified\\updatedEpsilon\\rl-model-3000-2024-03-19.pt'))
 model.eval()
 
-input_folder = "Virus test\\Locker"
+input_folder = "TestData\\malware"
 # output_folder = "test_modified\\dqeaf"
-output_folder = "modified\\updatedEpsilon\\1240"
+output_folder = "modified\\updatedEpsilon\\3000"
 onlyfiles = [f for f in os.listdir(input_folder)]
 
 def test_model():
