@@ -105,15 +105,13 @@ class NaivePrioritizedBuffer(object):
 	
 def update_epsilon(n):
     epsilon_start = 1.0
-    epsilon_final = 0.4
+    epsilon_final = 0.6
     epsilon_decay = 1000  # N from the research paper (equation #6)
 
     # Inverse square root decay
     epsilon = epsilon_start / np.sqrt(1 + n / epsilon_decay)
-
     if epsilon <= epsilon_final:
         epsilon = epsilon_final
-
     return epsilon
 
 
@@ -264,9 +262,51 @@ class RangeNormalize(object):
 			outputs.append(_input)
 		return outputs if idx > 1 else outputs[0]
 
+def test_model():
+
+	total_reward = 0
+	F = 100 #total test files
+	T = 80 # total mutations allowed
+	ratio = F * 0.5 # if number of mutations generated is half the total size
+	success = 0
+	rn = RangeNormalize(-0.5,0.5)
+	fe = pefeatures.PEFeatureExtractor()
+	malware_path = "TestData\malware\*"
+	all_files = glob.glob(malware_path)
+	for episode in range(1, F):
+		file_path = random.choice(all_files)
+		state = env.reset(file_path)
+		state_norm = rn(state)
+		state_norm = torch.from_numpy(state_norm).float().unsqueeze(0).to(device)
+		for mutation in range(1, T):
+
+			actions = current_model.forward(state_norm)
+			print(actions)
+
+			action = torch.argmax(actions).item()
+			next_state, reward, done, _ = env.step(action)
+			print('episode : ' + str(episode))
+			print('mutation : ' + str(mutation))
+			print('test action : ' + str(action))
+			print('test reward : ' + str(reward))
+			state = next_state
+			state_norm = rn(state)
+			state_norm = torch.from_numpy(state_norm).float().unsqueeze(0).to(device)
+
+			if(done):
+				success = success + 1
+				break
+
+		if success >= ratio:
+			print('success : ' + str(success))
+			return True
+
+	print('success : ' + str(success))
+	return False
+
 def main():
 	print("[*] Starting training ...")
-	D = 6000 #rl episodes
+	D = 3000 #rl episodes
 	T = 80 #mutations
 	B = 1000 # as mentioned in the paper (number of steps before learning starts)
 	batch_size = 32 # as mentioned in the paper (batch_size)
@@ -293,11 +333,13 @@ def main():
 	# 	return file_path
 
 	
-
+	malware_path = "Data\malware\*"
+	all_files = glob.glob(malware_path)
 	fig, axs = plt.subplots(1,figsize=(10,8))  # Create a figure and a set of subplots
 	for episode in range(1, D):
 		malware_path =  "Data\malware\*"
-		file_path = glob.glob(malware_path)[episode]
+		# file_path = glob.glob(malware_path)[episode]
+		file_path = random.choice(all_files)
 		print("Training: ", file_path)
 		state = env.reset(file_path)
 		state_norm = rn(state)
@@ -306,6 +348,7 @@ def main():
 		for mutation in range(1, T):
 			n = n + 1
 			epsilon = update_epsilon(n)
+			print("Epsilson: ",epsilon)
 			action = current_model.chooseAction(state_norm, epsilon)
 			next_state, reward, done, _ = env.step(action)
 			print("\t[+] Episode : " + str(episode) + " , Mutation # : " + str(mutation) + " , Mutation : " + str(ACTION_LOOKUP[action]) + " , Reward : " + str(reward))
@@ -349,6 +392,13 @@ def main():
 		# axs[1].plot(rewards, color='g')  # Plot the rewards on the first graph
 		# axs[1].set_ylabel('Rewards', color='g')  # Label the y-axis of the first graph
 		plt.pause(0.01)
+
+		if episode % 550 == 0:
+			print('testing model')
+			check = test_model()
+				
+		if check:
+			plt.savefig( "Modified rl-model-" + str(episode) + "-" +str(date.today())+".png")
 	torch.save(current_model.state_dict(), os.path.join(rl_output_directory, "rl-model-" + str(D) + "-" +str(date.today()) + ".pt" ))
 	print("[*] Saving model in models/ directory ...")
 	axs[0].plot(rewards, color='g')  # Plot the rewards on the first graph
